@@ -3,6 +3,7 @@ from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User
 
+# 🔐 Login Serializer
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField()
@@ -25,5 +26,13 @@ class LoginSerializer(serializers.Serializer):
                 "id": user.id,
                 "username": user.username,
                 "role": user.role,
+                "department": user.department.id if user.department else None
             }
         }
+
+
+# 👤 User Serializer (for admin panel)
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["id", "username", "role", "department"]

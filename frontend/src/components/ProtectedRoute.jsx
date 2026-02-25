@@ -1,15 +1,10 @@
 import { Navigate } from "react-router-dom";
 
-export default function ProtectedRoute({ children, role }) {
-  const token = localStorage.getItem("token");
-  const user = JSON.parse(localStorage.getItem("user"));
+export default function ProtectedRoute({ children }) {
+  const token = localStorage.getItem("access");
 
   if (!token) {
-    return <Navigate to="/" />;
-  }
-
-  if (role && user?.role !== role) {
-    return <div className="p-6 text-red-600">Access Denied</div>;
+    return <Navigate to="/" replace />;
   }
 
   return children;

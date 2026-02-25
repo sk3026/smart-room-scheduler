@@ -1,7 +1,10 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from departments.models import Department
+
 
 class User(AbstractUser):
+
     ROLE_CHOICES = (
         ("TEACHER", "Teacher"),
         ("HOD", "HOD"),
@@ -15,7 +18,7 @@ class User(AbstractUser):
     )
 
     department = models.ForeignKey(
-        "departments.Department",
+        Department,
         on_delete=models.SET_NULL,
         null=True,
         blank=True
