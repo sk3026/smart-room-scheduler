@@ -19,6 +19,12 @@ class ScheduleSerializer(serializers.ModelSerializer):
         read_only=True
     )
 
+    # ✅ FIX: send department name
+    department = serializers.CharField(
+        source="teacher.department.name",
+        read_only=True
+    )
+
     class Meta:
         model = Schedule
         fields = [
@@ -31,5 +37,6 @@ class ScheduleSerializer(serializers.ModelSerializer):
             "subject",
             "subject_name",
             "room",
-            "room_name"
+            "room_name",
+            "department"
         ]

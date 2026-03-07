@@ -12,30 +12,54 @@ const slots = [
   "16:00"
 ];
 
-export function generateMatrix(scheduleData) {
+export function generateMatrix(scheduleData = []) {
+
+  console.log("RAW SCHEDULE DATA:", scheduleData);
+
   const matrix = {};
 
-  // initialize empty matrix
   days.forEach((day) => {
+
     matrix[day] = {};
 
     slots.forEach((slot) => {
+
       matrix[day][slot] = null;
+
     });
+
   });
 
-  // fill matrix with schedule data
   scheduleData.forEach((item) => {
-    const time = item.start_time.slice(0, 5);
+
+    if (!item.start_time) return;
+
+    const time = item.start_time.slice(0,5);
+
+    console.log("Processing schedule item:", item);
 
     if (matrix[item.day] && matrix[item.day][time] !== undefined) {
+
       matrix[item.day][time] = {
+
         id: item.id,
+
         teacher: item.teacher_name,
         subject: item.subject_name,
+
+        teacher_id: item.teacher,
+        subject_id: item.subject,
+
+        department: item.department
+
       };
+
     }
+
   });
 
+  console.log("FINAL MATRIX:", matrix);
+
   return { matrix, days, slots };
+
 }

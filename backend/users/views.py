@@ -28,7 +28,14 @@ class UserListView(generics.ListAPIView):
     def get_queryset(self):
         if self.request.user.role != "SUPERADMIN":
             return User.objects.none()
-        return User.objects.all()
+        return User.objects.all()  
+
+class TeacherListView(generics.ListAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return User.objects.filter(role="TEACHER")    
 
 
 # ✏ Update User Role (SUPERADMIN only)

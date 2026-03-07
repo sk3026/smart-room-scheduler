@@ -1,17 +1,18 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+
 import API from "../api/axios";
+
 import ScheduleTable from "../components/ScheduleTable";
 import EditScheduleModal from "../components/EditScheduleModal";
+
 import { generateMatrix } from "../utils/scheduleMatrix";
 
 export default function RoomSchedule() {
+
   const { id } = useParams();
 
-  const [matrix, setMatrix] = useState({});
-  const [days, setDays] = useState([]);
-  const [slots, setSlots] = useState([]);
-
+  const [scheduleData, setScheduleData] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [subjects, setSubjects] = useState([]);
 
@@ -19,43 +20,104 @@ export default function RoomSchedule() {
   const [showModal, setShowModal] = useState(false);
 
   const fetchSchedule = async () => {
-    const res = await API.get(`/schedule/?room=${id}`);
 
-    const result = generateMatrix(res.data);
+    try {
 
-    setMatrix(result.matrix);
-    setDays(result.days);
-    setSlots(result.slots);
+      const res = await API.get(`/schedule/?room=${id}`);
+
+      console.log("Schedule API:", res.data);
+
+      setScheduleData(res.data);
+
+    } catch (err) {
+
+      console.error("Schedule fetch error:", err);
+
+    }
+
   };
 
-  const fetchMetaData = async () => {
-    const teachersRes = await API.get("/users/");
-    const subjectsRes = await API.get("/subjects/");
+  const fetchTeachers = async () => {
 
-    setTeachers(teachersRes.data);
-    setSubjects(subjectsRes.data);
+    try {
+
+      const res = await API.get("/users/teachers/");
+
+      console.log("Teachers API:", res.data);
+
+      setTeachers(res.data);
+
+    } catch (err) {
+
+      console.error("Teacher API error:", err);
+      setTeachers([]);
+
+    }
+
+  };
+
+  const fetchSubjects = async () => {
+
+    try {
+
+      const res = await API.get("/subjects/");
+
+      console.log("Subjects API:", res.data);
+
+      setSubjects(res.data);
+
+    } catch (err) {
+
+      console.error("Subjects API error:", err);
+      setSubjects([]);
+
+    }
+
   };
 
   useEffect(() => {
+
     fetchSchedule();
-    fetchMetaData();
+    fetchTeachers();
+    fetchSubjects();
+
   }, [id]);
 
+  const { matrix, days, slots } = generateMatrix(scheduleData);
+
   const handleCellClick = (day, slot, cell) => {
-    setSelectedCell({ day, slot, cell });
+
+    console.log("Clicked cell:", { day, slot, cell });
+
+    setSelectedCell({
+      day,
+      slot,
+      room: id,
+      cell
+    });
+
     setShowModal(true);
+
   };
 
   return (
+
     <div className="p-6">
+
+      <h1 className="text-xl font-bold mb-4">
+        Room Schedule
+      </h1>
+
       <ScheduleTable
         matrix={matrix}
         days={days}
         slots={slots}
+        subjects={subjects}
         onCellClick={handleCellClick}
       />
 
       {showModal && (
+
         <EditScheduleModal
           cell={selectedCell}
           teachers={teachers}
@@ -63,7 +125,11 @@ export default function RoomSchedule() {
           close={() => setShowModal(false)}
           refresh={fetchSchedule}
         />
+
       )}
+
     </div>
+
   );
+
 }

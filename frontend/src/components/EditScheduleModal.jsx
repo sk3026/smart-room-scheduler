@@ -8,22 +8,47 @@ export default function EditScheduleModal({
   close,
   refresh,
 }) {
-  const [teacher, setTeacher] = useState("");
-  const [subject, setSubject] = useState("");
+
+  const [teacher, setTeacher] = useState(cell?.cell?.teacher_id ?? "");
+  const [subject, setSubject] = useState(cell?.cell?.subject_id ?? "");
 
   const handleSave = async () => {
-    if (!cell?.cell) return;
 
-    await API.put(`/schedule/${cell.cell.id}/`, {
-      teacher,
-      subject,
-    });
+    try {
 
-    refresh();
-    close();
+      if (cell?.cell?.id) {
+
+        await API.put(`/schedule/${cell.cell.id}/`, {
+          teacher,
+          subject,
+        });
+
+      } else {
+
+        await API.post(`/schedule/`, {
+          room: cell.room,
+          day: cell.day,
+          start_time: cell.slot + ":00",
+          teacher,
+          subject
+        });
+
+      }
+
+      refresh();
+      close();
+
+    } catch (err) {
+
+      console.error(err);
+      alert("Failed to update schedule");
+
+    }
+
   };
 
   return (
+
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40">
 
       <div className="bg-white p-6 rounded shadow w-96">
@@ -33,6 +58,7 @@ export default function EditScheduleModal({
         </h2>
 
         <div className="mb-3">
+
           <label className="block mb-1">Teacher</label>
 
           <select
@@ -40,17 +66,23 @@ export default function EditScheduleModal({
             onChange={(e) => setTeacher(e.target.value)}
             className="w-full border p-2"
           >
+
             <option value="">Select Teacher</option>
 
-            {teachers.map((t) => (
+            {teachers?.map((t) => (
+
               <option key={t.id} value={t.id}>
                 {t.username}
               </option>
+
             ))}
+
           </select>
+
         </div>
 
         <div className="mb-3">
+
           <label className="block mb-1">Subject</label>
 
           <select
@@ -58,14 +90,19 @@ export default function EditScheduleModal({
             onChange={(e) => setSubject(e.target.value)}
             className="w-full border p-2"
           >
+
             <option value="">Select Subject</option>
 
-            {subjects.map((s) => (
+            {subjects?.map((s) => (
+
               <option key={s.id} value={s.id}>
                 {s.name}
               </option>
+
             ))}
+
           </select>
+
         </div>
 
         <div className="flex justify-end gap-2">
@@ -89,5 +126,7 @@ export default function EditScheduleModal({
       </div>
 
     </div>
+
   );
+
 }
