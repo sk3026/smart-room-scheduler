@@ -1,20 +1,24 @@
 from rest_framework import serializers
 from .models import Schedule
 
+
 class ScheduleSerializer(serializers.ModelSerializer):
-    teacher_name = serializers.CharField(source="teacher.username", read_only=True)
-    subject_name = serializers.CharField(source="subject.name", read_only=True)
+
+    teacher_name = serializers.CharField(
+        source="teacher.username",
+        read_only=True
+    )
+
+    subject_name = serializers.CharField(
+        source="subject.name",
+        read_only=True
+    )
+
+    room_name = serializers.CharField(
+        source="room.room_number",
+        read_only=True
+    )
 
     class Meta:
         model = Schedule
-        fields = [
-            "id",
-            "day",
-            "start_time",
-            "end_time",
-            "teacher",
-            "room",
-            "subject",
-            "teacher_name",
-            "subject_name",
-        ]
+        fields = "__all__"

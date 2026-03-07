@@ -3,10 +3,10 @@ from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User
 
-# 🔐 Login Serializer
+
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
-    password = serializers.CharField()
+    password = serializers.CharField(write_only=True)
 
     def validate(self, data):
         user = authenticate(
@@ -14,7 +14,7 @@ class LoginSerializer(serializers.Serializer):
             password=data["password"]
         )
 
-        if not user:
+        if user is None:
             raise serializers.ValidationError("Invalid credentials")
 
         refresh = RefreshToken.for_user(user)
@@ -26,12 +26,11 @@ class LoginSerializer(serializers.Serializer):
                 "id": user.id,
                 "username": user.username,
                 "role": user.role,
-                "department": user.department.id if user.department else None
+                "department": user.department.name if user.department else None
             }
         }
 
 
-# 👤 User Serializer (for admin panel)
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
