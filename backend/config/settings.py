@@ -6,16 +6,16 @@ from pathlib import Path
 from datetime import timedelta
 import os
 
-
 # Base directory
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # SECURITY
 SECRET_KEY = "django-insecure-change-this-key"
-DEBUG = True
 
-ALLOWED_HOSTS = []
+DEBUG = False
+
+ALLOWED_HOSTS = ["*"]
 
 
 # APPLICATIONS
@@ -47,6 +47,9 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
 
     "django.middleware.security.SecurityMiddleware",
+
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -59,7 +62,7 @@ MIDDLEWARE = [
 ROOT_URLCONF = "config.urls"
 
 
-# TEMPLATES (for React build)
+# TEMPLATES (React build)
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -125,6 +128,8 @@ STATIC_URL = "/static/"
 
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
 
 # CUSTOM USER MODEL
 AUTH_USER_MODEL = "users.User"
@@ -158,5 +163,5 @@ SIMPLE_JWT = {
 }
 
 
-# CORS SETTINGS (allow frontend requests)
+# CORS SETTINGS
 CORS_ALLOW_ALL_ORIGINS = True
