@@ -21,4 +21,15 @@ class ScheduleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Schedule
-        fields = "__all__"
+        fields = [
+            "id",
+            "day",
+            "start_time",
+            "end_time",
+            "teacher",
+            "teacher_name",
+            "subject",
+            "subject_name",
+            "room",
+            "room_name"
+        ]
