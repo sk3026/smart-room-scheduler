@@ -18,19 +18,21 @@ export default function EditScheduleModal({
 
       if (cell?.cell?.id) {
 
-        await API.put(`/schedule/${cell.cell.id}/`, {
-          teacher,
-          subject,
+        // UPDATE existing schedule
+        await API.patch(`/schedule/${cell.cell.id}/`, {
+          teacher: parseInt(teacher),
+          subject: parseInt(subject)
         });
 
       } else {
 
+        // CREATE new schedule
         await API.post(`/schedule/`, {
           room: cell.room,
           day: cell.day,
           start_time: cell.slot + ":00",
-          teacher,
-          subject
+          teacher: parseInt(teacher),
+          subject: parseInt(subject)
         });
 
       }
@@ -40,7 +42,7 @@ export default function EditScheduleModal({
 
     } catch (err) {
 
-      console.error(err);
+      console.error("Schedule update error:", err.response?.data);
       alert("Failed to update schedule");
 
     }
