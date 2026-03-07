@@ -5,36 +5,30 @@ export default function ScheduleTable({
   matrix,
   days,
   slots,
-  subjects = [],
   onCellClick
 }) {
 
   const { user } = useContext(AuthContext);
 
-  console.log("USER:", user);
-  console.log("SUBJECTS:", subjects);
+  console.log("CURRENT USER:", user);
 
   const canEdit = (cell) => {
 
-    if (!user) {
-      console.log("No user found");
-      return false;
-    }
+    if (!user) return false;
 
-    const role = String(user.role || "").toUpperCase();
+    const role = String(user.role || "").toLowerCase();
 
-    console.log("ROLE:", role);
+    console.log("ROLE DETECTED:", role);
 
     // ADMIN or SUPERADMIN → always editable
-    if (role === "SUPERADMIN" || role === "ADMIN") {
+    if (role.includes("admin")) {
       console.log("ADMIN ACCESS");
       return true;
     }
 
     // HOD logic
-    if (role === "HOD") {
+    if (role === "hod") {
 
-      // Allow editing empty slots
       if (!cell) {
         console.log("Empty slot editable for HOD");
         return true;
@@ -49,7 +43,7 @@ export default function ScheduleTable({
       return userDept === cellDept;
     }
 
-    // TEACHER → view only
+    // Teacher
     console.log("Teacher view only");
     return false;
   };
@@ -60,21 +54,18 @@ export default function ScheduleTable({
 
       <thead>
         <tr>
-
           <th className="border p-2">Day / Time</th>
-
-          {slots?.map((slot) => (
+          {slots.map((slot) => (
             <th key={slot} className="border p-2">
               {slot}
             </th>
           ))}
-
         </tr>
       </thead>
 
       <tbody>
 
-        {days?.map((day) => (
+        {days.map((day) => (
 
           <tr key={day}>
 
@@ -82,12 +73,10 @@ export default function ScheduleTable({
               {day}
             </td>
 
-            {slots?.map((slot) => {
+            {slots.map((slot) => {
 
               const cell = matrix?.[day]?.[slot];
               const editable = canEdit(cell);
-
-              console.log("Cell:", cell, "Editable:", editable);
 
               return (
 
@@ -96,7 +85,7 @@ export default function ScheduleTable({
 
                   onClick={() => {
                     if (editable) {
-                      console.log("Cell clicked:", day, slot, cell);
+                      console.log("CELL CLICKED:", day, slot, cell);
                       onCellClick(day, slot, cell);
                     }
                   }}
@@ -104,7 +93,7 @@ export default function ScheduleTable({
                   className={`border p-3 text-center transition
                     ${
                       editable
-                        ? "bg-yellow-200 hover:bg-yellow-300 border-2 border-yellow-400 cursor-pointer"
+                        ? "bg-yellow-200 hover:bg-yellow-300 cursor-pointer border-2 border-yellow-400"
                         : "bg-gray-100"
                     }`}
                 >
@@ -114,7 +103,6 @@ export default function ScheduleTable({
                       <div className="font-semibold">
                         {cell.teacher}
                       </div>
-
                       <div className="text-xs text-gray-600">
                         {cell.subject}
                       </div>

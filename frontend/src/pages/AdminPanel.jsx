@@ -3,66 +3,141 @@ import API from "../api/axios";
 import Navbar from "../components/Navbar";
 
 export default function AdminPanel() {
+
   const [users, setUsers] = useState([]);
 
-  useEffect(() => {
-    const fetchUsers = async () => {
+  const fetchUsers = async () => {
+    try {
       const res = await API.get("users/");
+      console.log("Users:", res.data);
       setUsers(res.data);
-    };
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
+  useEffect(() => {
     fetchUsers();
   }, []);
 
-  const handleRoleChange = async (userId, newRole) => {
-    await API.patch(`users/${userId}/`, {
-      role: newRole,
-    });
+  const makeHOD = async (user) => {
 
-    setUsers((prev) =>
-      prev.map((u) =>
-        u.id === userId ? { ...u, role: newRole } : u
-      )
-    );
+    try {
+
+      await API.patch(`users/${user.id}/`, {
+        role: "HOD",
+        department: user.department
+      });
+
+      fetchUsers();
+
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update role");
+    }
+
   };
+
+  const makeTeacher = async (user) => {
+
+    try {
+
+      await API.patch(`users/${user.id}/`, {
+        role: "TEACHER",
+        department: user.department
+      });
+
+      fetchUsers();
+
+    } catch (err) {
+      console.error(err);
+    }
+
+  };
+
+  // group users by department
+  const departments = {};
+
+  users.forEach((u) => {
+
+    const dept = u.department || "No Department";
+
+    if (!departments[dept]) {
+      departments[dept] = [];
+    }
+
+    departments[dept].push(u);
+
+  });
 
   return (
     <>
       <Navbar />
-      <div className="p-6">
-        <h2 className="text-xl font-bold mb-4">Admin Panel</h2>
 
-        <table className="table-auto border w-full">
-          <thead>
-            <tr>
-              <th className="border p-2">Username</th>
-              <th className="border p-2">Role</th>
-              <th className="border p-2">Change Role</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => (
-              <tr key={user.id}>
-                <td className="border p-2">{user.username}</td>
-                <td className="border p-2">{user.role}</td>
-                <td className="border p-2">
-                  <select
-                    value={user.role}
-                    onChange={(e) =>
-                      handleRoleChange(user.id, e.target.value)
-                    }
-                    className="border p-1"
+      <div className="p-6">
+
+        <h2 className="text-2xl font-bold mb-6">
+          Department Management
+        </h2>
+
+        {Object.keys(departments).map((dept) => (
+
+          <div
+            key={dept}
+            className="mb-6 border rounded p-4"
+          >
+
+            <h3 className="text-lg font-semibold mb-3">
+              {dept} Department
+            </h3>
+
+            {departments[dept].map((user) => (
+
+              <div
+                key={user.id}
+                className="flex justify-between items-center border-b py-2"
+              >
+
+                <span>{user.username}</span>
+
+                {user.role === "HOD" ? (
+
+                  <div className="flex gap-2">
+
+                    <span className="text-green-600 font-semibold">
+                      HOD
+                    </span>
+
+                    <button
+                      onClick={() => makeTeacher(user)}
+                      className="bg-gray-400 text-white px-2 py-1 rounded"
+                    >
+                      Remove HOD
+                    </button>
+
+                  </div>
+
+                ) : (
+
+                  <button
+                    onClick={() => makeHOD(user)}
+                    className="bg-blue-500 text-white px-3 py-1 rounded"
                   >
-                    <option value="TEACHER">TEACHER</option>
-                    <option value="HOD">HOD</option>
-                    <option value="SUPERADMIN">SUPERADMIN</option>
-                  </select>
-                </td>
-              </tr>
+                    Make HOD
+                  </button>
+
+                )}
+
+              </div>
+
             ))}
-          </tbody>
-        </table>
+
+          </div>
+
+        ))}
+
       </div>
     </>
   );
+
 }
