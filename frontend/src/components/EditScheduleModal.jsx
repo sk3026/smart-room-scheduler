@@ -18,7 +18,7 @@ export default function EditScheduleModal({
 
       if (cell?.cell?.id) {
 
-        // UPDATE existing schedule
+        // UPDATE schedule
         await API.patch(`/schedule/${cell.cell.id}/`, {
           teacher: parseInt(teacher),
           subject: parseInt(subject)
@@ -26,11 +26,12 @@ export default function EditScheduleModal({
 
       } else {
 
-        // CREATE new schedule
-        await API.post(`/schedule/`, {
+        // CREATE schedule
+        await API.post(`/schedule/create/`, {
           room: cell.room,
           day: cell.day,
           start_time: cell.slot + ":00",
+          end_time: cell.slot + ":59",
           teacher: parseInt(teacher),
           subject: parseInt(subject)
         });
@@ -44,6 +45,28 @@ export default function EditScheduleModal({
 
       console.error("Schedule update error:", err.response?.data);
       alert("Failed to update schedule");
+
+    }
+
+  };
+
+  const handleDelete = async () => {
+
+    try {
+
+      if (cell?.cell?.id) {
+
+        await API.delete(`/schedule/delete/${cell.cell.id}/`);
+
+        refresh();
+        close();
+
+      }
+
+    } catch (err) {
+
+      console.error("Delete error:", err.response?.data);
+      alert("Failed to delete schedule");
 
     }
 
@@ -72,11 +95,9 @@ export default function EditScheduleModal({
             <option value="">Select Teacher</option>
 
             {teachers?.map((t) => (
-
               <option key={t.id} value={t.id}>
                 {t.username}
               </option>
-
             ))}
 
           </select>
@@ -96,11 +117,9 @@ export default function EditScheduleModal({
             <option value="">Select Subject</option>
 
             {subjects?.map((s) => (
-
               <option key={s.id} value={s.id}>
                 {s.name}
               </option>
-
             ))}
 
           </select>
@@ -108,6 +127,15 @@ export default function EditScheduleModal({
         </div>
 
         <div className="flex justify-end gap-2">
+
+          {cell?.cell?.id && (
+            <button
+              onClick={handleDelete}
+              className="bg-red-600 text-white px-3 py-1 rounded"
+            >
+              Delete
+            </button>
+          )}
 
           <button
             onClick={close}

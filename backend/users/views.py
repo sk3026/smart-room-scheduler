@@ -6,11 +6,13 @@ from .serializers import LoginSerializer, UserSerializer
 from .models import User
 
 
-# 🔐 Login View (PUBLIC)
+# LOGIN
 class LoginView(APIView):
-    permission_classes = [AllowAny]   # ✅ Allow login without token
+
+    permission_classes = [AllowAny]
 
     def post(self, request):
+
         serializer = LoginSerializer(data=request.data)
 
         if serializer.is_valid():
@@ -19,48 +21,90 @@ class LoginView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# 📋 List Users (SUPERADMIN only)
+# LIST USERS (SUPERADMIN)
 class UserListView(generics.ListAPIView):
-    queryset = User.objects.all()
+
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+
         if self.request.user.role != "SUPERADMIN":
             return User.objects.none()
-        return User.objects.all()  
 
-class TeacherListView(generics.ListAPIView):
-    serializer_class = UserSerializer
+        return User.objects.all()
+
+
+# CREATE USER (SUPERADMIN)
+class UserCreateView(APIView):
+
     permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        return User.objects.filter(role="TEACHER")    
+    def post(self, request):
+
+        if request.user.role != "SUPERADMIN":
+            return Response(
+                {"detail": "Only SUPERADMIN can create users."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        serializer = UserSerializer(data=request.data)
+
+        if serializer.is_valid():
+            user = serializer.save()
+
+            return Response(
+                {
+                    "id": user.id,
+                    "username": user.username,
+                    "role": user.role,
+                    "department": user.department.name if user.department else None
+                },
+                status=status.HTTP_201_CREATED
+            )
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# ✏ Update User Role (SUPERADMIN only)
+# UPDATE USER ROLE
 class UserUpdateView(generics.UpdateAPIView):
+
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
 
     def update(self, request, *args, **kwargs):
+
         if request.user.role != "SUPERADMIN":
             return Response(
                 {"detail": "Only SUPERADMIN can update users."},
                 status=status.HTTP_403_FORBIDDEN
             )
+
         return super().update(request, *args, **kwargs)
 
     def perform_update(self, serializer):
+
         role = serializer.validated_data.get("role")
         department = serializer.validated_data.get("department")
 
-        # 🚨 Enforce only one HOD per department
+        # Only one HOD per department
         if role == "HOD" and department:
+
             User.objects.filter(
                 department=department,
                 role="HOD"
             ).exclude(pk=self.get_object().pk).update(role="TEACHER")
 
         serializer.save()
+
+
+# TEACHER LIST
+class TeacherListView(generics.ListAPIView):
+
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+
+        return User.objects.filter(role="TEACHER")

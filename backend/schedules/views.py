@@ -147,3 +147,27 @@ def schedule_matrix(request):
         matrix[room][slot] = f"{s.subject.name} - {s.teacher.username}"
 
     return Response(matrix)
+
+
+class ScheduleDeleteView(generics.DestroyAPIView):
+
+    queryset = Schedule.objects.all()
+    serializer_class = ScheduleSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_destroy(self, instance):
+
+        user = self.request.user
+
+        if user.role == "HOD":
+            if instance.teacher.department != user.department:
+                raise PermissionDenied(
+                    "You cannot delete other department schedules"
+                )
+
+        elif user.role != "SUPERADMIN":
+            raise PermissionDenied(
+                "Only HOD or SUPERADMIN can delete schedules"
+            )
+
+        instance.delete()

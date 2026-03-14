@@ -3,21 +3,25 @@ from .views import (
     ScheduleListView,
     ScheduleCreateView,
     ScheduleUpdateView,
+    ScheduleDeleteView,
     schedule_matrix
 )
 
 urlpatterns = [
 
-    # 📅 List schedules
+    # List schedules
     path("", ScheduleListView.as_view()),
 
-    # ➕ Create schedule
+    # Create schedule
     path("create/", ScheduleCreateView.as_view()),
 
-    # ✏ Update schedule
+    # Update schedule
     path("<int:pk>/", ScheduleUpdateView.as_view()),
 
-    # 📊 Timetable matrix for UI
+    # Delete schedule
+    path("delete/<int:pk>/", ScheduleDeleteView.as_view()),
+
+    # Timetable matrix
     path("matrix/", schedule_matrix),
 
 ]
