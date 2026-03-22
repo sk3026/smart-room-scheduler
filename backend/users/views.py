@@ -108,3 +108,20 @@ class TeacherListView(generics.ListAPIView):
     def get_queryset(self):
 
         return User.objects.filter(role="TEACHER")
+from django.contrib.auth import get_user_model
+
+UserModel = get_user_model()
+
+class CreateAdminView(APIView):
+    permission_classes = [AllowAny]  # temporary
+
+    def get(self, request):
+        if not UserModel.objects.filter(username="admin").exists():
+            UserModel.objects.create_superuser(
+                username="admin",
+                email="admin@gmail.com",
+                password="admin123"
+            )
+            return Response({"status": "admin created"})
+        
+        return Response({"status": "admin already exists"})

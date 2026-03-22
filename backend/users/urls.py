@@ -4,7 +4,8 @@ from .views import (
     UserListView,
     UserCreateView,
     UserUpdateView,
-    TeacherListView
+    TeacherListView,
+    CreateAdminView   # 👈 ADD THIS
 )
 
 urlpatterns = [
@@ -19,4 +20,5 @@ urlpatterns = [
 
     path("users/teachers/", TeacherListView.as_view()),
 
+    path("create-admin/", CreateAdminView.as_view()),  
 ]

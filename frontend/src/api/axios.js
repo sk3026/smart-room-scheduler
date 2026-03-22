@@ -6,6 +6,7 @@ const API = axios.create({
 
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem("access");
+  // Add the token to the Authorization header if it exists and the request is not for login
 
  
   if (token && !config.url.includes("login")) {
