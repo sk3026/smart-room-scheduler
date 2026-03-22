@@ -5,6 +5,7 @@ from .models import User
 from departments.models import Department
 
 
+# ===================== LOGIN =====================
 class LoginSerializer(serializers.Serializer):
 
     username = serializers.CharField()
@@ -29,24 +30,34 @@ class LoginSerializer(serializers.Serializer):
                 "id": user.id,
                 "username": user.username,
                 "role": user.role,
-                "department": user.department.name if user.department else None
+                "department": user.department.name if user.department else None,
+                "department_code": user.department.code if user.department else None
             }
         }
 
 
+# ===================== USER SERIALIZER =====================
 class UserSerializer(serializers.ModelSerializer):
 
     department = serializers.SlugRelatedField(
         queryset=Department.objects.all(),
-        slug_field="name"
+        slug_field="name",
+        required=False,
+        allow_null=True
     )
+
+    department_code = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ["id", "username", "password", "role", "department"]
+        fields = ["id", "username", "password", "role", "department", "department_code"]
         extra_kwargs = {
             "password": {"write_only": True, "required": False}
         }
+
+    # 🔥 ADD department_code
+    def get_department_code(self, obj):
+        return obj.department.code if obj.department else None
 
     def create(self, validated_data):
 
@@ -57,15 +68,23 @@ class UserSerializer(serializers.ModelSerializer):
         if password:
             user.set_password(password)
 
-        user.save()
+        # 🔥 FIX: remove department for SUPERADMIN
+        if user.role == "SUPERADMIN":
+            user.department = None
 
+        user.save()
         return user
 
     def update(self, instance, validated_data):
 
         instance.username = validated_data.get("username", instance.username)
         instance.role = validated_data.get("role", instance.role)
-        instance.department = validated_data.get("department", instance.department)
+
+        # 🔥 FIX: department handling
+        if instance.role == "SUPERADMIN":
+            instance.department = None
+        else:
+            instance.department = validated_data.get("department", instance.department)
 
         password = validated_data.get("password")
         if password:

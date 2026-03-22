@@ -27,11 +27,26 @@ export default function Navbar() {
           Rooms
         </Link>
 
-        {/* Admin Panel visible only for SUPERADMIN */}
+        {/* Admin Panel */}
         {user?.role === "SUPERADMIN" && (
           <Link to="/admin" className="hover:underline">
-            Admin Panel
+            U&D_Management
           </Link>
+        )}
+
+        {/* 🔥 SETTINGS ICON (NEW) */}
+        {user?.role === "SUPERADMIN" && (
+          <a
+            href="https://smart-room-scheduler.onrender.com/admin/"
+            className="hover:underline"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Django Admin"
+            
+          >
+            db_settings
+          </a>
+          
         )}
 
         <span>

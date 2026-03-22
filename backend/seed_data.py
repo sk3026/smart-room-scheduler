@@ -13,7 +13,6 @@ from rooms.models import Room
 from subjects.models import Subject
 from schedules.models import Schedule
 
-
 print("Resetting database...")
 
 
@@ -25,10 +24,10 @@ Department.objects.all().delete()
 User.objects.exclude(username="admin").delete()
 
 
-# -------- DEPARTMENTS --------
-cse = Department.objects.create(name="CSE")
-ece = Department.objects.create(name="ECE")
-me = Department.objects.create(name="Mechanical")
+# -------- DEPARTMENTS (WITH CODE) --------
+cse = Department.objects.create(name="CSE", code="01")
+ece = Department.objects.create(name="ECE", code="02")
+me = Department.objects.create(name="Mechanical", code="03")
 
 
 # -------- ADMIN --------
@@ -38,11 +37,9 @@ admin, _ = User.objects.get_or_create(
 )
 
 admin.set_password("test123")
-
-# 🔥 ADD THESE LINES (VERY IMPORTANT)
 admin.is_staff = True
 admin.is_superuser = True
-
+admin.department = None  # 🔥 IMPORTANT
 admin.save()
 
 
@@ -55,21 +52,42 @@ User.objects.create_user("hod_me", password="test123", role="HOD", department=me
 # -------- TEACHERS --------
 teachers = []
 
-for i in range(1,6):
-    teachers.append(User.objects.create_user(f"cse_teacher{i}", password="test123", role="TEACHER", department=cse))
+for i in range(1, 6):
+    teachers.append(
+        User.objects.create_user(
+            f"cse_teacher{i}",
+            password="test123",
+            role="TEACHER",
+            department=cse
+        )
+    )
 
-for i in range(1,5):
-    teachers.append(User.objects.create_user(f"ece_teacher{i}", password="test123", role="TEACHER", department=ece))
+for i in range(1, 5):
+    teachers.append(
+        User.objects.create_user(
+            f"ece_teacher{i}",
+            password="test123",
+            role="TEACHER",
+            department=ece
+        )
+    )
 
-for i in range(1,5):
-    teachers.append(User.objects.create_user(f"me_teacher{i}", password="test123", role="TEACHER", department=me))
+for i in range(1, 5):
+    teachers.append(
+        User.objects.create_user(
+            f"me_teacher{i}",
+            password="test123",
+            role="TEACHER",
+            department=me
+        )
+    )
 
 
 # -------- ROOMS --------
 room_numbers = [
-"A101","A102","A103","A104",
-"B201","B202","B203","B204",
-"C301","C302","C303","C304"
+    "A101","A102","A103","A104",
+    "B201","B202","B203","B204",
+    "C301","C302","C303","C304"
 ]
 
 rooms = []
@@ -85,35 +103,29 @@ for r in room_numbers:
     )
 
 
-# -------- SUBJECTS --------
+# -------- SUBJECTS (WITH CODE) --------
 subjects = []
 
-subjects.append(Subject.objects.create(name="DBMS", department=cse))
-subjects.append(Subject.objects.create(name="Operating Systems", department=cse))
-subjects.append(Subject.objects.create(name="Data Structures", department=cse))
+subjects.append(Subject.objects.create(name="DBMS", code="DB01", department=cse))
+subjects.append(Subject.objects.create(name="Operating Systems", code="OS01", department=cse))
+subjects.append(Subject.objects.create(name="Data Structures", code="DS01", department=cse))
 
-subjects.append(Subject.objects.create(name="Signals and Systems", department=ece))
-subjects.append(Subject.objects.create(name="Digital Electronics", department=ece))
+subjects.append(Subject.objects.create(name="Signals and Systems", code="SS02", department=ece))
+subjects.append(Subject.objects.create(name="Digital Electronics", code="DE02", department=ece))
 
-subjects.append(Subject.objects.create(name="Machine Design", department=me))
-subjects.append(Subject.objects.create(name="Thermodynamics", department=me))
-subjects.append(Subject.objects.create(name="Fluid Mechanics", department=me))
-subjects.append(Subject.objects.create(name="Microprocessors", department=me))
+subjects.append(Subject.objects.create(name="Machine Design", code="MD03", department=me))
+subjects.append(Subject.objects.create(name="Thermodynamics", code="TH03", department=me))
+subjects.append(Subject.objects.create(name="Fluid Mechanics", code="FM03", department=me))
+subjects.append(Subject.objects.create(name="Microprocessors", code="MP03", department=me))
 
 
 # -------- SCHEDULE GENERATION --------
-days = ["Monday","Tuesday","Wednesday","Thursday","Friday"]
+days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
 
 slots = [
-time(8,0),
-time(9,0),
-time(10,0),
-time(11,0),
-time(12,0),
-time(13,0),
-time(14,0),
-time(15,0),
-time(16,0)
+    time(8,0), time(9,0), time(10,0),
+    time(11,0), time(12,0), time(13,0),
+    time(14,0), time(15,0), time(16,0)
 ]
 
 for room in rooms:
@@ -128,7 +140,10 @@ for room in rooms:
 
             teacher = random.choice(teachers)
 
-            dept_subjects = [s for s in subjects if s.department == teacher.department]
+            # 🔥 IMPORTANT: SAME DEPARTMENT SUBJECT ONLY
+            dept_subjects = [
+                s for s in subjects if s.department == teacher.department
+            ]
 
             if not dept_subjects:
                 continue
@@ -141,7 +156,7 @@ for room in rooms:
                 subject=subject,
                 day=day,
                 start_time=slot,
-                end_time=time(slot.hour+1,0)
+                end_time=time(slot.hour + 1, 0)
             )
 
 

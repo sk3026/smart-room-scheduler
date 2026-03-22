@@ -6,13 +6,11 @@ from .serializers import LoginSerializer, UserSerializer
 from .models import User
 
 
-# LOGIN
+# ===================== LOGIN =====================
 class LoginView(APIView):
-
     permission_classes = [AllowAny]
 
     def post(self, request):
-
         serializer = LoginSerializer(data=request.data)
 
         if serializer.is_valid():
@@ -21,23 +19,22 @@ class LoginView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# LIST USERS (SUPERADMIN)
+# ===================== LIST USERS (SUPERADMIN) =====================
 class UserListView(generics.ListAPIView):
-
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        user = self.request.user
 
-        if self.request.user.role != "SUPERADMIN":
+        if user.role != "SUPERADMIN":
             return User.objects.none()
 
-        return User.objects.all()
+        return User.objects.all().select_related("department")
 
 
-# CREATE USER (SUPERADMIN)
+# ===================== CREATE USER =====================
 class UserCreateView(APIView):
-
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
@@ -53,12 +50,18 @@ class UserCreateView(APIView):
         if serializer.is_valid():
             user = serializer.save()
 
+            # 🔥 FIX: Remove department for admin
+            if user.role == "SUPERADMIN":
+                user.department = None
+                user.save()
+
             return Response(
                 {
                     "id": user.id,
                     "username": user.username,
                     "role": user.role,
-                    "department": user.department.name if user.department else None
+                    "department": user.department.name if user.department else None,
+                    "department_code": user.department.code if user.department else None
                 },
                 status=status.HTTP_201_CREATED
             )
@@ -66,9 +69,8 @@ class UserCreateView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# UPDATE USER ROLE
+# ===================== UPDATE USER =====================
 class UserUpdateView(generics.UpdateAPIView):
-
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
@@ -88,40 +90,40 @@ class UserUpdateView(generics.UpdateAPIView):
         role = serializer.validated_data.get("role")
         department = serializer.validated_data.get("department")
 
-        # Only one HOD per department
+        # 🔥 Only one HOD per department
         if role == "HOD" and department:
-
             User.objects.filter(
                 department=department,
                 role="HOD"
             ).exclude(pk=self.get_object().pk).update(role="TEACHER")
 
-        serializer.save()
+        user = serializer.save()
+
+        # 🔥 Remove department for SUPERADMIN
+        if user.role == "SUPERADMIN":
+            user.department = None
+            user.save()
 
 
-# TEACHER LIST
+# ===================== TEACHER LIST =====================
 class TeacherListView(generics.ListAPIView):
-
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
 
-        return User.objects.filter(role="TEACHER")
-from django.contrib.auth import get_user_model
+        user = self.request.user
 
-UserModel = get_user_model()
+        # SUPERADMIN → all teachers
+        if user.role == "SUPERADMIN":
+            return User.objects.filter(role="TEACHER")
 
-class CreateAdminView(APIView):
-    permission_classes = [AllowAny]  # temporary
-
-    def get(self, request):
-        if not UserModel.objects.filter(username="admin").exists():
-            UserModel.objects.create_superuser(
-                username="admin",
-                email="admin@gmail.com",
-                password="admin123"
+        # HOD → only own department teachers
+        if user.role == "HOD":
+            return User.objects.filter(
+                role="TEACHER",
+                department=user.department
             )
-            return Response({"status": "admin created"})
-        
-        return Response({"status": "admin already exists"})
+
+        # others → none
+        return User.objects.none()

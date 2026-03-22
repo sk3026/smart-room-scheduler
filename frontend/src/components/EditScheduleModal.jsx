@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
 import API from "../api/axios";
 
 export default function EditScheduleModal({
@@ -9,16 +10,31 @@ export default function EditScheduleModal({
   refresh,
 }) {
 
+  const { user } = useContext(AuthContext);
+
   const [teacher, setTeacher] = useState(cell?.cell?.teacher_id ?? "");
   const [subject, setSubject] = useState(cell?.cell?.subject_id ?? "");
 
-  const handleSave = async () => {
+  // ✅ CLEAN FILTER USING department_code (NO HACKS)
+  const filteredTeachers =
+    user?.role === "SUPERADMIN"
+      ? teachers
+      : teachers?.filter(
+          (t) => t.department_code === user.department_code
+        );
 
+  const filteredSubjects =
+    user?.role === "SUPERADMIN"
+      ? subjects
+      : subjects?.filter(
+          (s) => s.department_code === user.department_code
+        );
+
+  const handleSave = async () => {
     try {
 
       if (cell?.cell?.id) {
 
-        // UPDATE schedule
         await API.patch(`/schedule/${cell.cell.id}/`, {
           teacher: parseInt(teacher),
           subject: parseInt(subject)
@@ -26,7 +42,6 @@ export default function EditScheduleModal({
 
       } else {
 
-        // CREATE schedule
         await API.post(`/schedule/create/`, {
           room: cell.room,
           day: cell.day,
@@ -42,16 +57,12 @@ export default function EditScheduleModal({
       close();
 
     } catch (err) {
-
       console.error("Schedule update error:", err.response?.data);
       alert("Failed to update schedule");
-
     }
-
   };
 
   const handleDelete = async () => {
-
     try {
 
       if (cell?.cell?.id) {
@@ -64,12 +75,9 @@ export default function EditScheduleModal({
       }
 
     } catch (err) {
-
       console.error("Delete error:", err.response?.data);
       alert("Failed to delete schedule");
-
     }
-
   };
 
   return (
@@ -82,6 +90,7 @@ export default function EditScheduleModal({
           Edit Schedule
         </h2>
 
+        {/* -------- TEACHER -------- */}
         <div className="mb-3">
 
           <label className="block mb-1">Teacher</label>
@@ -94,9 +103,9 @@ export default function EditScheduleModal({
 
             <option value="">Select Teacher</option>
 
-            {teachers?.map((t) => (
+            {filteredTeachers?.map((t) => (
               <option key={t.id} value={t.id}>
-                {t.username}
+                {t.username}_{t.department_code}
               </option>
             ))}
 
@@ -104,6 +113,7 @@ export default function EditScheduleModal({
 
         </div>
 
+        {/* -------- SUBJECT -------- */}
         <div className="mb-3">
 
           <label className="block mb-1">Subject</label>
@@ -116,9 +126,9 @@ export default function EditScheduleModal({
 
             <option value="">Select Subject</option>
 
-            {subjects?.map((s) => (
+            {filteredSubjects?.map((s) => (
               <option key={s.id} value={s.id}>
-                {s.name}
+                {s.name}_{s.code}
               </option>
             ))}
 
@@ -126,6 +136,7 @@ export default function EditScheduleModal({
 
         </div>
 
+        {/* -------- BUTTONS -------- */}
         <div className="flex justify-end gap-2">
 
           {cell?.cell?.id && (

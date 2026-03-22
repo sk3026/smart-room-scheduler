@@ -5,20 +5,36 @@ import Navbar from "../components/Navbar";
 export default function AdminPanel() {
 
   const [users, setUsers] = useState([]);
+  const [departmentsList, setDepartmentsList] = useState([]);
 
   const [newUser, setNewUser] = useState({
     username: "",
     password: "",
     role: "TEACHER",
-    department: "CSE"
+    department: ""
   });
 
-  const departmentsList = ["CSE", "ECE", "Mechanical"];
-
+  // 🔥 FETCH USERS
   const fetchUsers = async () => {
     try {
       const res = await API.get("users/");
+      console.log("USERS:", res.data);
+
       setUsers(res.data);
+
+      // 🔥 EXTRACT UNIQUE DEPARTMENTS FROM USERS
+      const uniqueDepartments = [
+        ...new Set(
+          res.data
+            .map((u) => u.department)
+            .filter((d) => d) // remove null (admin)
+        ),
+      ];
+
+      console.log("DEPARTMENTS:", uniqueDepartments);
+
+      setDepartmentsList(uniqueDepartments);
+
     } catch (err) {
       console.error(err);
     }
@@ -28,62 +44,68 @@ export default function AdminPanel() {
     fetchUsers();
   }, []);
 
+  // 🔥 CREATE USER
   const createUser = async () => {
     try {
 
-      await API.post("users/create/", newUser);
+      let payload = { ...newUser };
+
+      // remove department for admin safety
+      if (payload.role === "SUPERADMIN") {
+        delete payload.department;
+      }
+
+      console.log("CREATE PAYLOAD:", payload);
+
+      await API.post("users/create/", payload);
 
       setNewUser({
         username: "",
         password: "",
         role: "TEACHER",
-        department: "CSE"
+        department: ""
       });
 
       fetchUsers();
 
     } catch (err) {
-  console.log("CREATE USER ERROR:", err.response.data);
-  alert(JSON.stringify(err.response.data));
-}
+      console.log("CREATE USER ERROR:", err.response?.data);
+      alert(JSON.stringify(err.response?.data));
+    }
   };
 
   const makeHOD = async (user) => {
     try {
-
       await API.patch(`users/${user.id}/`, {
         role: "HOD",
         department: user.department
       });
-
       fetchUsers();
-
     } catch (err) {
-  console.log("ERROR:", err.response.data);
-  alert(JSON.stringify(err.response.data));
-}
+      console.log("ERROR:", err.response?.data);
+    }
   };
 
   const makeTeacher = async (user) => {
     try {
-
       await API.patch(`users/${user.id}/`, {
         role: "TEACHER",
         department: user.department
       });
-
       fetchUsers();
-
     } catch (err) {
       console.error(err);
     }
   };
 
+  // 🔥 GROUP USERS BY DEPARTMENT (SKIP ADMIN)
   const departments = {};
 
   users.forEach((u) => {
 
-    const dept = u.department || "No Department";
+    if (!u.department) return; // skip admin
+
+    const dept = u.department;
 
     if (!departments[dept]) {
       departments[dept] = [];
@@ -143,6 +165,7 @@ export default function AdminPanel() {
               <option value="HOD">HOD</option>
             </select>
 
+            {/* 🔥 DYNAMIC DEPARTMENTS */}
             <select
               value={newUser.department}
               onChange={(e) =>
@@ -150,9 +173,14 @@ export default function AdminPanel() {
               }
               className="border p-2 rounded"
             >
+              <option value="">Select Department</option>
+
               {departmentsList.map((d) => (
-                <option key={d} value={d}>{d}</option>
+                <option key={d} value={d}>
+                  {d}
+                </option>
               ))}
+
             </select>
 
             <button
@@ -167,13 +195,9 @@ export default function AdminPanel() {
         </div>
 
         {/* USERS BY DEPARTMENT */}
-
         {Object.keys(departments).map((dept) => (
 
-          <div
-            key={dept}
-            className="mb-6 border rounded p-4"
-          >
+          <div key={dept} className="mb-6 border rounded p-4">
 
             <h3 className="text-lg font-semibold mb-3">
               {dept} Department
@@ -227,5 +251,4 @@ export default function AdminPanel() {
       </div>
     </>
   );
-
 }

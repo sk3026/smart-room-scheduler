@@ -41,7 +41,6 @@ export default function Login() {
       localStorage.setItem("user", JSON.stringify(res.data.user));
 
       setUser(res.data.user);
-
       navigate("/dashboard");
 
     } catch (err) {
@@ -55,8 +54,21 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded shadow w-96">
+    <div className="relative min-h-screen flex items-center justify-center bg-gray-100">
+
+      {/* Watermark Background */}
+      <div
+        className="absolute inset-0 flex items-center justify-center opacity-10"
+        style={{
+          backgroundImage: "url('/image.png')",
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "center",
+          backgroundSize: "300px",
+        }}
+      ></div>
+
+      {/* Login Card */}
+      <div className="relative bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-lg w-96">
         <h2 className="text-xl font-bold mb-4 text-center">
           Login
         </h2>
@@ -70,7 +82,7 @@ export default function Login() {
             type="text"
             name="username"
             placeholder="Username"
-            className="w-full border p-2 mb-3 rounded"
+            className="w-full border p-2 mb-3 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
             onChange={handleChange}
           />
 
@@ -78,13 +90,13 @@ export default function Login() {
             type="password"
             name="password"
             placeholder="Password"
-            className="w-full border p-2 mb-4 rounded"
+            className="w-full border p-2 mb-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
             onChange={handleChange}
           />
 
           <button
             disabled={loading}
-            className="w-full bg-blue-600 text-white p-2 rounded"
+            className="w-full bg-blue-600 hover:bg-blue-700 transition text-white p-2 rounded"
           >
             {loading ? "Logging in..." : "Login"}
           </button>
