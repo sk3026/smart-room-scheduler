@@ -32,8 +32,17 @@ me = Department.objects.create(name="Mechanical")
 
 
 # -------- ADMIN --------
-admin, _ = User.objects.get_or_create(username="admin", defaults={"role": "SUPERADMIN"})
+admin, _ = User.objects.get_or_create(
+    username="admin",
+    defaults={"role": "SUPERADMIN"}
+)
+
 admin.set_password("test123")
+
+# 🔥 ADD THESE LINES (VERY IMPORTANT)
+admin.is_staff = True
+admin.is_superuser = True
+
 admin.save()
 
 
